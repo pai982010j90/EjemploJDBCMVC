@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.*;
 
 /**
  *
@@ -20,9 +21,10 @@ import java.util.logging.Logger;
  */
 public class Modelo {
 
-    List tabla1 = new ArrayList();
-    List<Persona> listaPersonas = new ArrayList<Persona>();
     Connection conn;
+    private List tabla1 = new ArrayList();
+    private Map<Integer,Persona> listaPersonas = new HashMap<Integer,Persona>();
+    private Map<Integer, Curso> impartidos = new HashMap<Integer, Curso>();
 
     public Modelo() {
         String url = "jdbc:mysql://localhost/Simple";
@@ -50,6 +52,8 @@ public class Modelo {
     public void inicializaModeloDesdeBD() {
         inicializaTabla1();
         inicializaPersonas();
+        inicializaImpartidos();
+
 
 
     }
@@ -99,10 +103,78 @@ public class Modelo {
                 dni = rs.getInt("dni");
                 nombre = rs.getString("nombre");
                 System.out.println(dni + "," + nombre);
-                tabla1.add(new Persona(dni, nombre));
+                listaPersonas.put(new Integer(dni), new Persona(dni, nombre));
             }
         } catch (Exception ex) {
             Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    private void inicializaImpartidos() {
+        Statement s;
+        try {
+            s = conn.createStatement();
+
+            String query = "SELECT * FROM Curso";
+            System.err.println(query);
+            s.executeQuery(query);
+            ResultSet rs = s.getResultSet();
+
+            int numeroExpediente;
+            String nombreCurso;
+            Date fechaComienzo;
+            int horas;
+
+            Curso curso;
+
+            while (rs.next()) {
+                numeroExpediente = rs.getInt("numeroExpediente");
+                nombreCurso = rs.getString("nombreCurso");
+                fechaComienzo = rs.getDate("fechaComienzo");
+                horas = rs.getInt("horas");
+                System.out.println(numeroExpediente + "," + nombreCurso + ", " + fechaComienzo + "," + horas);
+                curso = new Curso(numeroExpediente, nombreCurso, fechaComienzo, horas);
+                impartidos.put(numeroExpediente, curso);
+                curso.inicializaEvaluacionesDesdeBD(conn);
+
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+private void addEvaluacionesACursoDesdeBD(Curso curso) {
+        Statement s;
+ 
+        try {
+            s = conn.createStatement();
+ 
+            String query = "SELECT * FROM Evaluacion WHERE numExpedienteCurso=" + curso.getNumeroExpediente();
+            System.err.println(query);
+            s.executeQuery(query);
+            ResultSet rs = s.getResultSet();
+ 
+            Curso cursoEv;
+            Persona persona;
+            Date fecha;
+            float puntuacion;
+            int dniPersona;
+ 
+            Evaluacion evaluacion = null;
+            List<Evaluacion> evaluaciones = curso.getEvaluaciones();
+ 
+ 
+            while (rs.next()) {
+                fecha = rs.getDate("fecha");
+                puntuacion = rs.getFloat("puntuacion");
+                dniPersona = rs.getInt("dniPersona");
+               
+                evaluacion = new Evaluacion(curso, listaPersonas.get(dniPersona), fecha,puntuacion);
+                evaluaciones.add(evaluacion);
+                //System.out.println(numExpediente + "," + nombreCurso + "," + fechaComienzo + "," + horas);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }    
 }

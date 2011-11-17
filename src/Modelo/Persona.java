@@ -4,6 +4,8 @@
  */
 package Modelo;
 
+import java.util.*;
+
 /**
  *
  * @author nanohp
@@ -12,6 +14,7 @@ public class Persona {
 
     private int dni;
     private String nombre;
+	Collection<Evaluacion> Evaluacion;
 
     public Persona(int dni, String nombre) {
         this.dni = dni;
