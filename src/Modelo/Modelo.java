@@ -54,6 +54,9 @@ public class Modelo {
         inicializaImpartidos();
         inicializaCursoEvaluaciones();
         inicializaPersonaEvaluaciones();
+        
+        Curso cursoAux = new Curso(9,"UML", new Date(2011,1,10), 200);
+        addNuevoCurso(cursoAux);
 
 
 
@@ -224,6 +227,24 @@ public class Modelo {
                 evaluaciones.add(evaluacion);
                 //System.out.println(numExpediente + "," + nombreCurso + "," + fechaComienzo + "," + horas);
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void addNuevoCurso(Curso curso){
+        Statement s;
+
+        try {
+            s = conn.createStatement();
+            
+            Date fecha = curso.getFechaComienzo();
+            String fechaStr = fecha.getYear()+"-"+(fecha.getMonth()+1)+"-"+fecha.getDate();
+
+            String query = "INSERT INTO Curso (numeroExpediente, nombreCurso, fechaComienzo, horas) "
+                    + " VALUES("+curso.getNumeroExpediente()+",'"+curso.getNombreCurso()+"','"+fechaStr+"',"+curso.getHoras()+")";
+            System.err.println(query);
+            s.executeUpdate(query);
         } catch (SQLException ex) {
             Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
         }
