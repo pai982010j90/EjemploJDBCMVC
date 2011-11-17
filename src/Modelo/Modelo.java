@@ -9,8 +9,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.*;
@@ -23,7 +21,7 @@ public class Modelo {
 
     Connection conn;
     private List tabla1 = new ArrayList();
-    private Map<Integer,Persona> listaPersonas = new HashMap<Integer,Persona>();
+    private Map<Integer, Persona> listaPersonas = new HashMap<Integer, Persona>();
     private Map<Integer, Curso> impartidos = new HashMap<Integer, Curso>();
 
     public Modelo() {
@@ -51,8 +49,11 @@ public class Modelo {
 
     public void inicializaModeloDesdeBD() {
         inicializaTabla1();
+        
         inicializaPersonas();
         inicializaImpartidos();
+        inicializaCursoEvaluaciones();
+        inicializaPersonaEvaluaciones();
 
 
 
@@ -134,47 +135,98 @@ public class Modelo {
                 horas = rs.getInt("horas");
                 System.out.println(numeroExpediente + "," + nombreCurso + ", " + fechaComienzo + "," + horas);
                 curso = new Curso(numeroExpediente, nombreCurso, fechaComienzo, horas);
-                impartidos.put(numeroExpediente, curso);
-                curso.inicializaEvaluacionesDesdeBD(conn);
 
+                impartidos.put(numeroExpediente, curso);
             }
         } catch (Exception ex) {
             Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-private void addEvaluacionesACursoDesdeBD(Curso curso) {
+
+    private void addEvaluacionesACursoDesdeBD(Curso curso) {
         Statement s;
- 
+
         try {
             s = conn.createStatement();
- 
+
             String query = "SELECT * FROM Evaluacion WHERE numExpedienteCurso=" + curso.getNumeroExpediente();
             System.err.println(query);
             s.executeQuery(query);
             ResultSet rs = s.getResultSet();
- 
+
             Curso cursoEv;
             Persona persona;
             Date fecha;
             float puntuacion;
             int dniPersona;
- 
+
             Evaluacion evaluacion = null;
             List<Evaluacion> evaluaciones = curso.getEvaluaciones();
- 
- 
+
+
             while (rs.next()) {
                 fecha = rs.getDate("fecha");
                 puntuacion = rs.getFloat("puntuacion");
                 dniPersona = rs.getInt("dniPersona");
-               
-                evaluacion = new Evaluacion(curso, listaPersonas.get(dniPersona), fecha,puntuacion);
+
+                evaluacion = new Evaluacion(curso, listaPersonas.get(dniPersona), fecha, puntuacion);
                 evaluaciones.add(evaluacion);
                 //System.out.println(numExpediente + "," + nombreCurso + "," + fechaComienzo + "," + horas);
             }
         } catch (SQLException ex) {
             Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }    
+    }
+
+    private void inicializaCursoEvaluaciones() {
+        Collection<Curso> listaCursos = impartidos.values();
+        for (Iterator<Curso> i = listaCursos.iterator(); i.hasNext();) {
+            addEvaluacionesACursoDesdeBD(i.next());
+        }
+    }
+    
+    
+      private void inicializaPersonaEvaluaciones() {
+        Collection<Persona> listaPersonasAux = listaPersonas.values();
+        for (Iterator<Persona> i = listaPersonasAux.iterator(); i.hasNext();) {
+            addEvaluacionesAPersonaDesdeBD(i.next());
+        }
+    }
+
+    private void addEvaluacionesAPersonaDesdeBD(Persona persona) {
+        Statement s;
+
+        try {
+            s = conn.createStatement();
+
+            String query = "SELECT * FROM Evaluacion WHERE dniPersona=" + persona.getDni();
+            System.err.println(query);
+            s.executeQuery(query);
+            ResultSet rs = s.getResultSet();
+
+
+            int numExpedienteCurso;
+            Date fecha;
+            float puntuacion;
+            int dniPersona;
+
+            Evaluacion evaluacion = null;
+            List<Evaluacion> evaluaciones = persona.getEvaluaciones();
+
+
+            while (rs.next()) {
+                fecha = rs.getDate("fecha");
+                puntuacion = rs.getFloat("puntuacion");
+                numExpedienteCurso = rs.getInt("numExpedienteCurso");
+                dniPersona = rs.getInt("dniPersona");
+
+                evaluacion = new Evaluacion(impartidos.get(numExpedienteCurso), listaPersonas.get(dniPersona), fecha, puntuacion);
+                evaluaciones.add(evaluacion);
+                //System.out.println(numExpediente + "," + nombreCurso + "," + fechaComienzo + "," + horas);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
+

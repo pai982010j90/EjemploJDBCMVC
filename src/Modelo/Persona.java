@@ -14,7 +14,7 @@ public class Persona {
 
     private int dni;
     private String nombre;
-	Collection<Evaluacion> Evaluacion;
+    List<Evaluacion> evaluaciones = new ArrayList<Evaluacion>();
 
     public Persona(int dni, String nombre) {
         this.dni = dni;
@@ -36,4 +36,10 @@ public class Persona {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+
+    public List<Evaluacion> getEvaluaciones() {
+        return evaluaciones;
+    }
+    
+    
 }
