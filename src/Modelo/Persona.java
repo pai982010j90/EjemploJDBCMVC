@@ -41,5 +41,9 @@ public class Persona {
         return evaluaciones;
     }
     
+    public void addEvaluacion(Evaluacion ev){
+        evaluaciones.add(ev);
+    }
+    
     
 }

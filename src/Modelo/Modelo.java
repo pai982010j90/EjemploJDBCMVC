@@ -45,18 +45,38 @@ public class Modelo {
             System.err.println("Exception");
         }
 
+
+
     }
 
     public void inicializaModeloDesdeBD() {
         inicializaTabla1();
-        
+
         inicializaPersonas();
         inicializaImpartidos();
         inicializaCursoEvaluaciones();
         inicializaPersonaEvaluaciones();
-        
-        Curso cursoAux = new Curso(9,"UML", new Date(2011,1,10), 200);
-        addNuevoCurso(cursoAux);
+
+        Curso cursoAux = new Curso(9, "UML2", new Date(2011, 1, 10), 200);
+        Persona persona = new Persona(100, "Demetrio");
+        impartidos.put(cursoAux.getNumeroExpediente(), cursoAux);
+        listaPersonas.put(persona.getDni(), persona);
+        Evaluacion ev1 = new Evaluacion(cursoAux, persona, new Date(2011, 1, 10), 9.9f);
+
+        persona.getEvaluaciones().add(ev1);
+        persona.addEvaluacion(ev1);
+
+        cursoAux.getEvaluaciones().add(ev1);
+        cursoAux.addEvaluacion(ev1);
+
+
+
+
+
+
+        // Operaciones sobre BD
+        //addNuevoCurso(cursoAux);
+        addNuevoCursoCompleto(cursoAux);
 
 
 
@@ -187,9 +207,8 @@ public class Modelo {
             addEvaluacionesACursoDesdeBD(i.next());
         }
     }
-    
-    
-      private void inicializaPersonaEvaluaciones() {
+
+    private void inicializaPersonaEvaluaciones() {
         Collection<Persona> listaPersonasAux = listaPersonas.values();
         for (Iterator<Persona> i = listaPersonasAux.iterator(); i.hasNext();) {
             addEvaluacionesAPersonaDesdeBD(i.next());
@@ -231,23 +250,70 @@ public class Modelo {
             Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public void addNuevoCurso(Curso curso){
+
+    public void addNuevoCurso(Curso curso) {
         Statement s;
 
         try {
             s = conn.createStatement();
-            
+
             Date fecha = curso.getFechaComienzo();
-            String fechaStr = fecha.getYear()+"-"+(fecha.getMonth()+1)+"-"+fecha.getDate();
+            String fechaStr = fecha.getYear() + "-" + (fecha.getMonth() + 1) + "-" + fecha.getDate();
 
             String query = "INSERT INTO Curso (numeroExpediente, nombreCurso, fechaComienzo, horas) "
-                    + " VALUES("+curso.getNumeroExpediente()+",'"+curso.getNombreCurso()+"','"+fechaStr+"',"+curso.getHoras()+")";
+                    + " VALUES(" + curso.getNumeroExpediente() + ",'" + curso.getNombreCurso() + "','" + fechaStr + "'," + curso.getHoras() + ")";
             System.err.println(query);
             s.executeUpdate(query);
         } catch (SQLException ex) {
             Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-}
 
+    private void addNuevoCursoCompleto(Curso curso) {
+        addNuevoCurso(curso);
+        addEvaluaciones(curso.getEvaluaciones());
+    }
+
+    private void addEvaluaciones(List<Evaluacion> evaluaciones) {
+        Evaluacion ev;
+        Iterator<Evaluacion> itEvaluacion = evaluaciones.iterator();
+
+        while (itEvaluacion.hasNext()) {
+            ev = itEvaluacion.next();
+            addEvaluacionBD(ev);
+        }
+    }
+
+    public void addEvaluacionBD(Evaluacion ev) {
+        Statement s;
+
+        try {
+            s = conn.createStatement();
+
+            int dniPersona = ev.getPersona().getDni();
+            float puntuacion = ev.getPuntuacion();
+            int numExpedienteCurso = ev.getCurso().getNumeroExpediente();
+            Date fecha = ev.getFecha();
+            String fechaStr = fecha.getYear() + "-" + (fecha.getMonth() + 1) + "-" + fecha.getDate();
+
+            String query = "INSERT INTO Evaluacion (numExpedienteCurso, dniPersona, puntuacion, fecha) "
+                    + " VALUES(" + numExpedienteCurso + "," + dniPersona + "," + puntuacion + ",'" + fechaStr + "')";
+            System.err.println(query);
+            s.executeUpdate(query);
+        } catch (SQLException ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    protected void finalize() throws Throwable {
+        // Invoke the finalizer of our superclass
+        // We haven't discussed superclasses or this syntax yet
+        super.finalize();
+
+        // Delete a temporary file we were using
+        // If the file doesn't exist or tempfile is null, this can throw
+        // an exception, but that exception is ignored. 
+        System.err.println("Destruyendo objeto");
+        conn.close();
+    }
+}

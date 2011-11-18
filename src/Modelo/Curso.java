@@ -97,4 +97,8 @@ public class Curso {
     public void setNumeroExpediente(int numeroExpediente) {
         this.numeroExpediente = numeroExpediente;
     }
+    
+    public void addEvaluacion(Evaluacion ev){
+        evaluaciones.add(ev);
+    }
 }

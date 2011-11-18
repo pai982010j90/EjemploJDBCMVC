@@ -23,6 +23,7 @@ public class EjemploJDBCMVC {
         Vista vista = new Vista();
         Controlador controlador = new Controlador(vista, modelo);
         vista.setControlador(controlador);
+        System.runFinalizersOnExit(true);
         vista.arranca();
     }
 }
