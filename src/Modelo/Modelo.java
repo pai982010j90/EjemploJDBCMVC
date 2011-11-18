@@ -74,9 +74,12 @@ public class Modelo {
 
 
 
+
+
         // Operaciones sobre BD
         //addNuevoCurso(cursoAux);
-        addNuevoCursoCompleto(cursoAux);
+        addCursoCompletoBD(cursoAux);
+        addPersonaCompletaBD(persona);
 
 
 
@@ -251,7 +254,7 @@ public class Modelo {
         }
     }
 
-    public void addNuevoCurso(Curso curso) {
+    public void addNuevoCursoBD(Curso curso) {
         Statement s;
 
         try {
@@ -269,9 +272,31 @@ public class Modelo {
         }
     }
 
-    private void addNuevoCursoCompleto(Curso curso) {
-        addNuevoCurso(curso);
+    public void addNuevaPersonaBD(Persona persona) {
+        Statement s;
+
+        try {
+            s = conn.createStatement();
+
+
+            
+            String query = "INSERT INTO Persona (dni, nombre) "
+                    + " VALUES(" + persona.getDni() + ",'" + persona.getNombre() + "')";
+            System.err.println(query);
+            s.executeUpdate(query);
+        } catch (SQLException ex) {
+            Logger.getLogger(Modelo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void addCursoCompletoBD(Curso curso) {
+        addNuevoCursoBD(curso);
         addEvaluaciones(curso.getEvaluaciones());
+    }
+
+    private void addPersonaCompletaBD(Persona persona) {
+        addNuevaPersonaBD(persona);
+        addEvaluaciones(persona.getEvaluaciones());
     }
 
     private void addEvaluaciones(List<Evaluacion> evaluaciones) {
